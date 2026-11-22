@@ -114,6 +114,35 @@ async function fetchFares(ctx) {
 	return { scopes: [...scopes.values()], fines, info, source: `${ORIGIN}/s/biglietti-e-abbonamenti` };
 }
 
+/** Parcheggi di interscambio e in struttura gestiti dall'azienda. */
+async function fetchParking(ctx) {
+	const groups = await apexDirect(ctx, 'RetrieveStatoLinee/ACTION$retrieveParcheggiLocation');
+	const items = [];
+	for (const g of groups ?? []) {
+		for (const p of g.parcs ?? []) {
+			const [lat, lon] = String(p.Indirizzo__c ?? g.indirizzo ?? '').split(',').map((x) => parseFloat(x));
+			const status = text(p.statusLabel ?? p.Status__c);
+			items.push({
+				id: p.Id,
+				name: text(p.Name ?? g.location),
+				address: text(p.Info__c),
+				lat: Number.isFinite(lat) ? lat : null,
+				lon: Number.isFinite(lon) ? lon : null,
+				status,
+				level: /apert/i.test(status) ? 'ok' : /chius|non/i.test(status) ? 'bad' : 'warn',
+				hours: text(p.Orario__c),
+				spots: text(p.Posti_Auto__c),
+				charging: /^s/i.test(p.Colonnina__c ?? ''),
+				guarded: /^s/i.test(p.Custodito__c ?? ''),
+				payment: text(p.Modalita_Pagamento__c),
+				rates: clean(p.Tariffa__c),
+				passes: clean(p.Abbonamenti__c)
+			});
+		}
+	}
+	return items.sort((a, b) => a.name.localeCompare(b.name, 'it'));
+}
+
 export async function fetchAnm({ routeNames = [], maxDetails = 25 } = {}) {
 	const ctx = await session();
 
@@ -147,10 +176,12 @@ export async function fetchAnm({ routeNames = [], maxDetails = 25 } = {}) {
 
 	// ---- stato servizi ----
 	const services = [];
+	const lineIds = [];
 	for (const category of ['Metro', 'Bus', 'Funicolare']) {
 		const groups = await apexDirect(ctx, 'RetrieveStatoLinee/ACTION$retrieveLinee', { category });
 		for (const g of groups ?? [])
-			for (const l of g.linee ?? [])
+			for (const l of g.linee ?? []) {
+				lineIds.push([l.Name, l.Id]);
 				services.push({
 					name: l.Name,
 					type: l.tipoLabel ?? category,
@@ -159,6 +190,7 @@ export async function fetchAnm({ routeNames = [], maxDetails = 25 } = {}) {
 					detail: l.Stato_Linea__c ?? '',
 					level: level(l.Stato_Linea__c ?? l.statoLineaLabel ?? '')
 				});
+			}
 	}
 	let elevators = [];
 	try {
@@ -174,6 +206,26 @@ export async function fetchAnm({ routeNames = [], maxDetails = 25 } = {}) {
 		console.warn(`ascensori: ${e.message}`);
 	}
 
+	// ---- orari e frequenze testuali per linea ----
+	const lines = {};
+	for (const [name, id] of lineIds) {
+		try {
+			const d = await apexDirect(ctx, 'lineaDetailApexController/ACTION$getLinea', { lineaId: id });
+			const hours = clean(d?.Orario_in_vigore__c), frequency = clean(d?.Frequenza_corse__c);
+			if (hours || frequency) lines[name] = { type: text(d?.Type__c), hours, frequency };
+			await new Promise((r) => setTimeout(r, 100));
+		} catch (e) {
+			console.warn(`linea ${name}: ${e.message}`);
+		}
+	}
+
+	let parking = [];
+	try {
+		parking = await fetchParking(ctx);
+	} catch (e) {
+		console.warn(`parcheggi: ${e.message}`);
+	}
+
 	let fares = null;
 	try {
 		fares = await fetchFares(ctx);
@@ -181,5 +233,5 @@ export async function fetchAnm({ routeNames = [], maxDetails = 25 } = {}) {
 		console.warn(`tariffe: ${e.message}`);
 	}
 
-	return { news, status: { services, elevators }, fares };
+	return { news, status: { services, elevators }, fares, parking, lines };
 }

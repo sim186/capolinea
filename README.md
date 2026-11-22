@@ -12,7 +12,8 @@ linee, fermate e partenze del trasporto pubblico ANM di Napoli.
 - **Cerca** linee e fermate, anche con "fermate vicine" dalla posizione
 - **Avvisi**: scioperi, chiusure, deviazioni e stato dei servizi (metro, funicolari, bus, ascensori)
 - **Biglietti e abbonamenti**: tariffe ufficiali per ambito (aziendali e integrate) e sanzioni
-- **Linee**: schema a linea con fermate, interscambi e avvisi che le riguardano
+- **Parcheggi**: parcheggi di interscambio con stato, orari, posti, tariffe e marker sulla mappa
+- **Linee**: schema a linea con fermate, interscambi, avvisi, orari e frequenza indicati dall'azienda
 - **Fermata**: prossime partenze programmate, anche nei giorni successivi
 - **Mappa**: fermate e tracciati (MapLibre + OpenStreetMap)
 - **Percorso A→B**: stima per capire *quali linee prendere* (non basata sugli orari)
@@ -22,7 +23,7 @@ linee, fermate e partenze del trasporto pubblico ANM di Napoli.
 Nessun backend. Due script generano JSON statici in `static/data/<città>/`:
 
 - `npm run data` — scarica il GTFS di ogni feed e lo converte (linee, fermate, partenze, shape)
-- `npm run news` — scarica notizie, scioperi, stato servizi e tariffe dalla sorgente dell'azienda
+- `npm run news` — scarica notizie, scioperi, stato servizi, tariffe, parcheggi e testi delle linee dalla sorgente dell'azienda
 
 Il sito è una SPA SvelteKit statica che legge quei file. Una GitHub Action
 (`.github/workflows/deploy.yml`) ricostruisce e pubblica su GitHub Pages ogni 30 minuti.

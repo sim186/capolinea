@@ -4,11 +4,12 @@
 	import { page } from '$app/state';
 	import { onMount } from 'svelte';
 	import LineBadge from '$lib/components/LineBadge.svelte';
-	import { B, getCfg, lineColor, loadRoute, loadStops, titleCase, type Route, type StopIdx } from '$lib/data';
+	import { B, getCfg, lineColor, loadParking, loadRoute, loadStops, titleCase, type ParkingLot, type Route, type StopIdx } from '$lib/data';
 
 	let el: HTMLDivElement;
 	let selected = $state<StopIdx | null>(null);
 	let route = $state<Route | null>(null);
+	let lot = $state<ParkingLot | null>(null);
 
 	onMount(() => {
 		let map: import('maplibre-gl').Map | undefined;
@@ -22,11 +23,14 @@
 			const lineId = page.url.searchParams.get('linea');
 			const stopId = page.url.searchParams.get('fermata');
 			const focus = stops.find((s) => s[0] === stopId);
+			const parking = (await loadParking())?.items.filter((p) => p.lat != null && p.lon != null) ?? [];
+			const lotId = page.url.searchParams.get('parcheggio');
+			const lotFocus = parking.find((p) => p.id === lotId);
 
 			map = new maplibregl.Map({
 				container: el,
-				center: focus ? [focus[3], focus[2]] : (getCfg()?.center ?? [12.5, 42]),
-				zoom: focus ? 16 : (getCfg()?.zoom ?? 5),
+				center: focus ? [focus[3], focus[2]] : lotFocus ? [lotFocus.lon!, lotFocus.lat!] : (getCfg()?.center ?? [12.5, 42]),
+				zoom: focus || lotFocus ? 16 : (getCfg()?.zoom ?? 5),
 				attributionControl: { compact: true },
 				style: {
 					version: 8,
@@ -75,10 +79,24 @@
 				m.on('click', 'stops', (e) => {
 					const id = e.features?.[0]?.properties?.id;
 					selected = stops.find((s) => s[0] === id) ?? null;
+					lot = null;
 				});
 				m.on('mouseenter', 'stops', () => (m.getCanvas().style.cursor = 'pointer'));
 				m.on('mouseleave', 'stops', () => (m.getCanvas().style.cursor = ''));
 				if (focus) selected = focus;
+				for (const p of parking) {
+					const el = document.createElement('button');
+					el.className = 'pk';
+					el.textContent = 'P';
+					el.setAttribute('aria-label', `Parcheggio ${p.name}`);
+					el.onclick = (ev) => {
+						ev.stopPropagation();
+						lot = p;
+						selected = null;
+					};
+					new maplibregl.Marker({ element: el }).setLngLat([p.lon!, p.lat!]).addTo(m);
+				}
+				if (lotFocus) lot = lotFocus;
 
 				if (lineId) {
 					route = await loadRoute(lineId);
@@ -115,7 +133,16 @@
 			<LineBadge name={route.name} mode={route.mode} size="s" /> <span>Dettagli linea</span>
 		</a>
 	{/if}
-	{#if selected}
+	{#if lot}
+		<div class="sheet" role="dialog" aria-label="Parcheggio selezionato">
+			<div class="grow">
+				<div class="title-m ellipsis">Parcheggio {lot.name}</div>
+				<div class="muted body">{lot.status}{lot.spots ? ` · ${lot.spots}` : ''}</div>
+			</div>
+			<a class="btn" href="{B()}/parcheggi#{lot.id}">Dettagli</a>
+			<button class="btn text" onclick={() => (lot = null)} aria-label="Chiudi">✕</button>
+		</div>
+	{:else if selected}
 		<div class="sheet" role="dialog" aria-label="Fermata selezionata">
 			<div class="grow">
 				<div class="title-m ellipsis">{titleCase(selected[1])}</div>
@@ -128,6 +155,20 @@
 </div>
 
 <style>
+	:global(.pk) {
+		width: 28px;
+		height: 28px;
+		border-radius: 6px;
+		border: 2px solid #fff;
+		background: #1b5fa8;
+		color: #fff;
+		font: 800 16px/1 'Overpass Variable', system-ui, sans-serif;
+		cursor: pointer;
+		display: grid;
+		place-items: center;
+		padding: 0;
+		box-shadow: 0 1px 4px rgb(0 0 0 / 0.4);
+	}
 	.wrap {
 		position: fixed;
 		inset: calc(var(--bar-h) + env(safe-area-inset-top)) 0 calc(var(--nav-h) + env(safe-area-inset-bottom)) 0;

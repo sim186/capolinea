@@ -4,8 +4,8 @@
 	import LineBadge from '$lib/components/LineBadge.svelte';
 	import NewsCard from '$lib/components/NewsCard.svelte';
 	import {
-		hhmm, lineColor, loadNews, loadRoute, loadRoutes, loadStatus, loadStops, MODES, titleCase,
-		type NewsItem, type Route, type RouteIdx, type ServiceStatus, type StopIdx, B } from '$lib/data';
+		hhmm, lineColor, loadLineTexts, loadNews, loadRoute, loadRoutes, loadStatus, loadStops, MODES, titleCase,
+		type LineText, type NewsItem, type Route, type RouteIdx, type ServiceStatus, type StopIdx, B } from '$lib/data';
 
 	let route = $state<Route | null>(null);
 	let stops = $state<Map<string, StopIdx>>(new Map());
@@ -13,6 +13,7 @@
 	let error = $state('');
 	let st = $state<ServiceStatus | null>(null);
 	let related = $state<NewsItem[]>([]);
+	let text = $state<LineText | null>(null);
 	let routeMap = $state<Map<string, RouteIdx>>(new Map());
 
 	$effect(() => {
@@ -24,7 +25,8 @@
 				route = r;
 				stops = new Map(s.map((x) => [x[0], x]));
 				dir = 0;
-				Promise.all([loadStatus(), loadNews(), loadRoutes()]).then(([status, news, rs]) => {
+				Promise.all([loadStatus(), loadNews(), loadRoutes(), loadLineTexts()]).then(([status, news, rs, lt]) => {
+					text = lt?.items[r.name] ?? null;
 					st = status?.services.find((x) => x.name === r.name) ?? null;
 					related = news?.items.filter((n) => n.lines.includes(r.name)).slice(0, 4) ?? [];
 					routeMap = new Map(rs.map((x) => [x.name, x]));
@@ -72,6 +74,19 @@
 			{cur.trips} corse nel periodo.
 		</p>
 		<a class="btn tonal" href="{B()}/mappa?linea={route.id}"><Icon name="map" /> Vedi sulla mappa</a>
+
+		{#if text && (text.frequency || text.hours)}
+			<section class="card ot">
+				<h2 class="label">Orari e frequenza (indicati dall'azienda)</h2>
+				<!-- HTML sanitizzato in fase di build -->
+				{#if text.hours}<div class="html body">{@html text.hours}</div>{/if}
+				{#if text.frequency}
+					<h3 class="label sub">Frequenza delle corse</h3>
+					<p class="muted body">Minuti tra una corsa e l'altra.</p>
+					<div class="html body">{@html text.frequency}</div>
+				{/if}
+			</section>
+		{/if}
 
 		{#if related.length}
 			<section class="stack">
@@ -133,6 +148,17 @@
 	}
 	.statusbar.bad {
 		background: color-mix(in srgb, var(--error) 22%, var(--surface));
+	}
+	.ot {
+		display: flex;
+		flex-direction: column;
+		gap: 6px;
+	}
+	.sub {
+		margin-top: 8px;
+	}
+	.html :global(p) {
+		margin: 0 0 4px;
 	}
 	.seg {
 		display: grid;

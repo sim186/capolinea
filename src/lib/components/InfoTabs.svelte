@@ -1,17 +1,23 @@
 <script lang="ts">
 	import { B } from '$lib/data';
-	let { current }: { current: 'avvisi' | 'tariffe' } = $props();
+	let { current }: { current: 'avvisi' | 'tariffe' | 'parcheggi' } = $props();
+	const tabs = [
+		['avvisi', 'Avvisi'],
+		['tariffe', 'Biglietti'],
+		['parcheggi', 'Parcheggi']
+	] as const;
 </script>
 
 <div class="seg" role="group" aria-label="Sezione informazioni">
-	<a href="{B()}/avvisi" aria-current={current === 'avvisi' ? 'page' : undefined}>Avvisi e scioperi</a>
-	<a href="{B()}/tariffe" aria-current={current === 'tariffe' ? 'page' : undefined}>Biglietti e abbonamenti</a>
+	{#each tabs as [k, label] (k)}
+		<a href="{B()}/{k}" aria-current={current === k ? 'page' : undefined}>{label}</a>
+	{/each}
 </div>
 
 <style>
 	.seg {
 		display: grid;
-		grid-template-columns: 1fr 1fr;
+		grid-template-columns: repeat(3, 1fr);
 		border: 1px solid var(--outline);
 		border-radius: 20px;
 		overflow: hidden;
@@ -23,8 +29,7 @@
 		min-height: 44px;
 		padding: 4px 8px;
 		font-weight: 700;
-		font-size: 0.875rem;
-		line-height: 1.2;
+		font-size: 0.9375rem;
 	}
 	a + a {
 		border-left: 1px solid var(--outline);

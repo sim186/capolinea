@@ -42,7 +42,7 @@
 		href === ''
 			? path === '/' || path.startsWith('/fermata')
 			: href === '/info'
-				? path.startsWith('/avvisi') || path.startsWith('/tariffe')
+				? path.startsWith('/avvisi') || path.startsWith('/tariffe') || path.startsWith('/parcheggi')
 				: path.startsWith(href) || (href === '/linee' && path.startsWith('/linea/'));
 </script>
 

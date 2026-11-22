@@ -122,6 +122,27 @@ export interface Fares {
 	info: { title: string; html: string }[];
 	source: string;
 }
+export interface ParkingLot {
+	id: string;
+	name: string;
+	address: string;
+	lat: number | null;
+	lon: number | null;
+	status: string;
+	level: 'ok' | 'warn' | 'bad';
+	hours: string;
+	spots: string;
+	charging: boolean;
+	guarded: boolean;
+	payment: string;
+	rates: string;
+	passes: string;
+}
+export interface LineText {
+	type: string;
+	hours: string;
+	frequency: string;
+}
 export const euro = (n: number | null) =>
 	n == null ? '—' : n.toLocaleString('it-IT', { style: 'currency', currency: 'EUR' });
 
@@ -151,6 +172,8 @@ export const loadStop = (id: string) => load<StopDetail>(`stop/${id}`);
 /** null se il feed non ha notizie/stato */
 export const loadNews = () => load<News>('news').catch(() => null);
 export const loadFares = () => load<Fares>('fares').catch(() => null);
+export const loadParking = () => load<{ updated: string; items: ParkingLot[] }>('parking').catch(() => null);
+export const loadLineTexts = () => load<{ updated: string; items: Record<string, LineText> }>('lines').catch(() => null);
 export const loadStatus = () => load<Status>('status').catch(() => null);
 
 export async function stopMap(): Promise<Map<string, StopIdx>> {
