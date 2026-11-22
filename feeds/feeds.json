@@ -1,0 +1,15 @@
+[
+	{
+		"id": "napoli",
+		"name": "Napoli",
+		"operator": "ANM",
+		"operatorFull": "Azienda Napoletana Mobilità",
+		"website": "https://www.anm.it",
+		"gtfs": "https://www.anm.it/google/google-transit.zip",
+		"center": [14.2528, 40.8518],
+		"zoom": 12.5,
+		"lineColors": { "L1": "#E0A100", "L2": "#0099D8", "L6": "#1B3F94" },
+		"lineTextColors": { "L1": "#1a1a1a" },
+		"news": "anm"
+	}
+]

@@ -1,0 +1,239 @@
+@import '@fontsource-variable/overpass';
+
+/* Material Design 3 — token di colore (seed: azzurro #0A5FA8) */
+:root {
+	--primary: #0a5fa8;
+	--on-primary: #ffffff;
+	--primary-container: #d2e4ff;
+	--on-primary-container: #001c37;
+	--secondary-container: #dbe3f1;
+	--on-secondary-container: #141c27;
+	--error: #ba1a1a;
+	--surface: #fdfcff;
+	--on-surface: #1a1c1e;
+	--on-surface-variant: #43474e;
+	--surface-container-low: #f4f3f7;
+	--surface-container: #eeedf1;
+	--surface-container-high: #e8e7ec;
+	--outline: #73777f;
+	--outline-variant: #c3c7cf;
+	--accent: #d9261c;
+	--shadow: 0 1px 3px rgb(0 0 0 / 0.18), 0 1px 2px rgb(0 0 0 / 0.12);
+
+	--r-xs: 4px;
+	--r-sm: 8px;
+	--r-md: 12px;
+	--r-lg: 16px;
+	--r-xl: 28px;
+	--nav-h: 80px;
+	--bar-h: 56px;
+	color-scheme: light dark;
+}
+@media (prefers-color-scheme: dark) {
+	:root {
+		--primary: #a3c9ff;
+		--on-primary: #00315a;
+		--primary-container: #00487f;
+		--on-primary-container: #d2e4ff;
+		--secondary-container: #3f4854;
+		--on-secondary-container: #dbe3f1;
+		--error: #ffb4ab;
+		--surface: #111316;
+		--on-surface: #e3e2e6;
+		--on-surface-variant: #c3c7cf;
+		--surface-container-low: #1a1c1e;
+		--surface-container: #1e2022;
+		--surface-container-high: #282a2d;
+		--outline: #8d9199;
+		--outline-variant: #43474e;
+		--accent: #ff6b5f;
+	}
+}
+
+* {
+	box-sizing: border-box;
+	-webkit-tap-highlight-color: transparent;
+}
+html {
+	font-family: 'Overpass Variable', system-ui, sans-serif;
+	font-size: 16px;
+	background: var(--surface);
+	color: var(--on-surface);
+	-webkit-text-size-adjust: 100%;
+}
+body {
+	margin: 0;
+	min-height: 100dvh;
+}
+a {
+	color: inherit;
+	text-decoration: none;
+}
+button,
+input,
+select {
+	font: inherit;
+	color: inherit;
+}
+h1,
+h2,
+h3,
+p {
+	margin: 0;
+}
+
+/* Tipografia M3 */
+.display {
+	font-size: 2rem;
+	line-height: 2.5rem;
+	font-weight: 800;
+	letter-spacing: -0.01em;
+	text-transform: uppercase;
+}
+.title-l {
+	font-size: 1.375rem;
+	line-height: 1.75rem;
+	font-weight: 700;
+}
+.title-m {
+	font-size: 1rem;
+	line-height: 1.5rem;
+	font-weight: 700;
+	letter-spacing: 0.01em;
+}
+.body {
+	font-size: 0.9375rem;
+	line-height: 1.375rem;
+}
+.label {
+	font-size: 0.8125rem;
+	line-height: 1rem;
+	font-weight: 600;
+	letter-spacing: 0.04em;
+	text-transform: uppercase;
+	color: var(--on-surface-variant);
+}
+.muted {
+	color: var(--on-surface-variant);
+}
+
+/* Layout pagina */
+.page {
+	max-width: 720px;
+	margin: 0 auto;
+	padding: 16px 16px calc(var(--nav-h) + 24px);
+}
+.stack {
+	display: flex;
+	flex-direction: column;
+	gap: 16px;
+}
+
+/* Componenti M3 */
+.chip {
+	display: inline-flex;
+	align-items: center;
+	gap: 8px;
+	height: 32px;
+	padding: 0 14px;
+	border-radius: var(--r-sm);
+	border: 1px solid var(--outline);
+	background: transparent;
+	font-size: 0.875rem;
+	font-weight: 600;
+	cursor: pointer;
+	white-space: nowrap;
+}
+.chip[aria-pressed='true'],
+.chip.on {
+	background: var(--secondary-container);
+	color: var(--on-secondary-container);
+	border-color: transparent;
+}
+.btn {
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	gap: 8px;
+	height: 40px;
+	padding: 0 24px;
+	border-radius: 20px;
+	border: 0;
+	background: var(--primary);
+	color: var(--on-primary);
+	font-weight: 700;
+	letter-spacing: 0.02em;
+	cursor: pointer;
+}
+.btn.tonal {
+	background: var(--secondary-container);
+	color: var(--on-secondary-container);
+}
+.btn.text {
+	background: transparent;
+	color: var(--primary);
+	padding: 0 12px;
+}
+.btn:disabled {
+	opacity: 0.4;
+	cursor: default;
+}
+.card {
+	background: var(--surface-container-low);
+	border-radius: var(--r-lg);
+	padding: 16px;
+}
+.list {
+	list-style: none;
+	margin: 0;
+	padding: 0;
+	display: flex;
+	flex-direction: column;
+}
+.list > li > a,
+.list > li > button.row {
+	display: flex;
+	align-items: center;
+	gap: 14px;
+	min-height: 56px;
+	padding: 8px 4px;
+	width: 100%;
+	text-align: left;
+	background: none;
+	border: 0;
+	border-bottom: 1px solid var(--outline-variant);
+	cursor: pointer;
+}
+.list > li:last-child > a {
+	border-bottom: 0;
+}
+.list a:active,
+.list button.row:active {
+	background: var(--surface-container);
+}
+.grow {
+	flex: 1;
+	min-width: 0;
+}
+.ellipsis {
+	overflow: hidden;
+	text-overflow: ellipsis;
+	white-space: nowrap;
+}
+:focus-visible {
+	outline: 3px solid var(--primary);
+	outline-offset: 2px;
+}
+.sr {
+	position: absolute;
+	width: 1px;
+	height: 1px;
+	overflow: hidden;
+	clip: rect(0 0 0 0);
+}
+@media (prefers-reduced-motion: reduce) {
+	* {
+		transition: none !important;
+		animation: none !important;
+	}
+}
