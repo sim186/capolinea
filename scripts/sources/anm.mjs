@@ -75,6 +75,45 @@ function relatedLines(str, names) {
 const level = (s) =>
 	/regolar|in servizio$/i.test(s) ? 'ok' : /sosp|chius|interrott|non in servizio|guast/i.test(s) ? 'bad' : 'warn';
 
+const euro = (v) => {
+	const n = parseFloat(String(v ?? '').replace(/[^\d,.-]/g, '').replace(',', '.'));
+	return Number.isFinite(n) ? n : null;
+};
+
+/** Tariffe e sanzioni ufficiali + testi esplicativi della pagina "Biglietti e abbonamenti". */
+async function fetchFares(ctx) {
+	const rows = await apexDirect(ctx, 'RetrieveInfoTitoliDIViaggio/ACTION$retrieveTariffe');
+	const scopes = new Map();
+	for (const r of [...rows].sort((a, b) => (a.Posizione__c ?? 0) - (b.Posizione__c ?? 0))) {
+		const id = r.Ambito__c;
+		if (!scopes.has(id)) scopes.set(id, { id, name: id, items: [] });
+		scopes.get(id).items.push({
+			name: text(r.Descrizione__c).replace(/\s*\*+$/, ''),
+			company: euro(r.Tariffa_Aziendale_ANM__c),
+			integrated: euro(r.Tariffa_Integrata__c)
+		});
+	}
+	const fineRows = await apexDirect(ctx, 'RetrieveInfoTitoliDIViaggio/ACTION$retrieveSanzioni');
+	const fines = [...fineRows]
+		.sort((a, b) => (a.Posizione__c ?? 0) - (b.Posizione__c ?? 0))
+		.map((f) => ({
+			scope: f.Ambito__c,
+			within5: euro(f.Oblazione_entro_5_giorni__c),
+			within60: euro(f.Oblazione_entro_60_giorni__c),
+			full: euro(f.Sanzione_Intera__c)
+		}));
+	const info = [];
+	for (const [n, title] of [[2, 'Tipologie di titoli'], [3, 'Tariffe urbane ed extraurbane'], [4, 'Dove acquistare']]) {
+		try {
+			const html = clean(await apexDirect(ctx, 'SiteContentController/ACTION$getContenuto', { lingua: 'IT', nomePagina: `biglietti-e-abbonamenti${n}` }));
+			if (html) info.push({ title, html });
+		} catch (e) {
+			console.warn(`contenuto tariffe ${n}: ${e.message}`);
+		}
+	}
+	return { scopes: [...scopes.values()], fines, info, source: `${ORIGIN}/s/biglietti-e-abbonamenti` };
+}
+
 export async function fetchAnm({ routeNames = [], maxDetails = 25 } = {}) {
 	const ctx = await session();
 
@@ -135,5 +174,12 @@ export async function fetchAnm({ routeNames = [], maxDetails = 25 } = {}) {
 		console.warn(`ascensori: ${e.message}`);
 	}
 
-	return { news, status: { services, elevators } };
+	let fares = null;
+	try {
+		fares = await fetchFares(ctx);
+	} catch (e) {
+		console.warn(`tariffe: ${e.message}`);
+	}
+
+	return { news, status: { services, elevators }, fares };
 }

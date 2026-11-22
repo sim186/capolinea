@@ -3,7 +3,7 @@
 	import { base } from '$lib/paths';
 	import Brand from '$lib/components/Brand.svelte';
 	import Icon from '$lib/components/Icon.svelte';
-	import { loadFeeds, setFeed, type FeedCfg } from '$lib/data';
+	import { loadFeeds, loadNews, romeNow, setFeed, type FeedCfg } from '$lib/data';
 	import type { LayoutProps } from './$types';
 
 	let { children }: LayoutProps = $props();
@@ -24,15 +24,26 @@
 	const items = [
 		{ href: '', label: 'Cerca', icon: 'search' },
 		{ href: '/linee', label: 'Linee', icon: 'list' },
-		{ href: '/avvisi', label: 'Avvisi', icon: 'alert' },
 		{ href: '/mappa', label: 'Mappa', icon: 'map' },
-		{ href: '/percorso', label: 'Percorso', icon: 'route' }
+		{ href: '/percorso', label: 'Percorso', icon: 'route' },
+		{ href: '/info', label: 'Info', icon: 'alert' }
 	] as const;
+	// pallino sull'icona Info se ci sono scioperi o chiusure recenti
+	let alertDot = $state(false);
+	$effect(() => {
+		if (!cfg) return;
+		loadNews().then((n) => {
+			const limit = new Date(romeNow().day * 864e5 - 10 * 864e5).toISOString().slice(0, 10);
+			alertDot = !!n?.items.some((x) => (x.kind === 'strike' || x.kind === 'closure') && (x.date ?? '') >= limit);
+		});
+	});
 	const path = $derived(page.url.pathname.replace(base, '').replace(`/${id}`, '') || '/');
 	const active = (href: string) =>
 		href === ''
 			? path === '/' || path.startsWith('/fermata')
-			: path.startsWith(href) || (href === '/linee' && path.startsWith('/linea/'));
+			: href === '/info'
+				? path.startsWith('/avvisi') || path.startsWith('/tariffe')
+				: path.startsWith(href) || (href === '/linee' && path.startsWith('/linea/'));
 </script>
 
 <header class="bar">
@@ -61,8 +72,8 @@
 {#if cfg}
 	<nav class="nav" aria-label="Sezioni">
 		{#each items as it (it.href)}
-			<a href="{base}/{cfg.id}{it.href}" class:on={active(it.href)} aria-current={active(it.href) ? 'page' : undefined}>
-				<span class="pill"><Icon name={it.icon} /></span>
+			<a href="{base}/{cfg.id}{it.href === '/info' ? '/avvisi' : it.href}" class:on={active(it.href)} aria-current={active(it.href) ? 'page' : undefined}>
+				<span class="pill"><Icon name={it.icon} />{#if it.href === '/info' && alertDot}<span class="dot" aria-label="Nuovi avvisi"></span>{/if}</span>
 				<span class="lbl">{it.label}</span>
 			</a>
 		{/each}
@@ -133,6 +144,19 @@
 		height: 32px;
 		border-radius: 16px;
 		transition: background 0.15s;
+	}
+	.pill {
+		position: relative;
+	}
+	.dot {
+		position: absolute;
+		top: 2px;
+		right: 14px;
+		width: 9px;
+		height: 9px;
+		border-radius: 50%;
+		background: var(--accent);
+		border: 2px solid var(--surface-container);
 	}
 	.lbl {
 		font-size: 0.6875rem;

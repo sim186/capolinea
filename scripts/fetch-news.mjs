@@ -18,12 +18,13 @@ for (const f of feeds) {
 		const routeNames = existsSync(routesFile)
 			? [...new Set(JSON.parse(readFileSync(routesFile, 'utf8')).map((r) => r.name))]
 			: [];
-		const { news, status } = await SOURCES[f.news]({ routeNames });
+		const { news, status, fares } = await SOURCES[f.news]({ routeNames });
 		const updated = new Date().toISOString();
 		mkdirSync(dir, { recursive: true });
 		writeFileSync(`${dir}news.json`, JSON.stringify({ updated, items: news }));
 		writeFileSync(`${dir}status.json`, JSON.stringify({ updated, ...status }));
-		console.log(`${f.id}: ${news.length} notizie (${news.filter((n) => n.kind === 'strike').length} scioperi), ${status.services.length} linee, ${status.elevators.length} ascensori`);
+		if (fares) writeFileSync(`${dir}fares.json`, JSON.stringify({ updated, ...fares }));
+		console.log(`${f.id}: ${news.length} notizie (${news.filter((n) => n.kind === 'strike').length} scioperi), ${status.services.length} linee, ${status.elevators.length} ascensori, tariffe: ${fares ? fares.scopes.reduce((n, x) => n + x.items.length, 0) : 'no'}`);
 	} catch (e) {
 		failed++;
 		console.error(`${f.id}: ${e.message}`);

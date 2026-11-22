@@ -118,6 +118,7 @@
 		<div class="actions">
 			<button class="btn tonal" onclick={locate}><Icon name="locate" /> Fermate vicine</button>
 			<a class="btn tonal" href="{B()}/percorso"><Icon name="route" /> Pianifica</a>
+			<a class="btn tonal" href="{B()}/tariffe"><Icon name="ticket" /> Biglietti e prezzi</a>
 		</div>
 		{#if geoMsg}<p class="muted body" role="status">{geoMsg}</p>{/if}
 		{#if near?.length}

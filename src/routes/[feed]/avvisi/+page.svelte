@@ -3,6 +3,7 @@
 	import { getCfg, loadNews, loadRoutes, loadStatus, B, type News, type NewsItem, type RouteIdx, type Status } from '$lib/data';
 	import NewsCard from '$lib/components/NewsCard.svelte';
 	import LineBadge from '$lib/components/LineBadge.svelte';
+	import InfoTabs from '$lib/components/InfoTabs.svelte';
 
 	let news = $state<News | null | undefined>(undefined);
 	let status = $state<Status | null | undefined>(undefined);
@@ -30,7 +31,8 @@
 </script>
 
 <div class="page stack">
-	<h1 class="display">Avvisi</h1>
+	<h1 class="display">Info</h1>
+	<InfoTabs current="avvisi" />
 
 	{#if news === undefined}
 		<p class="muted body">Carico…</p>

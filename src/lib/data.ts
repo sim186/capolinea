@@ -110,6 +110,21 @@ export interface Status {
 	elevators: { name: string; status: string; info: string; hours: string; level: 'ok' | 'warn' }[];
 }
 
+export interface FareItem {
+	name: string;
+	company: number | null;
+	integrated: number | null;
+}
+export interface Fares {
+	updated: string;
+	scopes: { id: string; name: string; items: FareItem[] }[];
+	fines: { scope: string; within5: number | null; within60: number | null; full: number | null }[];
+	info: { title: string; html: string }[];
+	source: string;
+}
+export const euro = (n: number | null) =>
+	n == null ? '—' : n.toLocaleString('it-IT', { style: 'currency', currency: 'EUR' });
+
 // ---------- fetch con cache ----------
 const cache = new Map<string, Promise<unknown>>();
 function fetchJson<T>(url: string): Promise<T> {
@@ -135,6 +150,7 @@ export const loadRoute = (id: string) => load<Route>(`route/${id}`);
 export const loadStop = (id: string) => load<StopDetail>(`stop/${id}`);
 /** null se il feed non ha notizie/stato */
 export const loadNews = () => load<News>('news').catch(() => null);
+export const loadFares = () => load<Fares>('fares').catch(() => null);
 export const loadStatus = () => load<Status>('status').catch(() => null);
 
 export async function stopMap(): Promise<Map<string, StopIdx>> {
